@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="figma.css">
+    <script src="figma.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">₹</div>
+                <span class="logo-text">FinanceTracker</span>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-page="dashboard">
+                            <span>📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="transactions">
+                            <span>💳</span>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="budget">
+                            <span>🎯</span>
+                            <span>Budget</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="analytics">
+                            <span>📈</span>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="settings">
+                            <span>⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="budget-card">
+                <p class="budget-label">Monthly Budget</p>
+                <p class="budget-amount">₹2,000</p>
+                <div class="budget-bar">
+                    <div class="budget-progress"></div>
+                </div>
+                <p class="budget-spent">₹1,076 spent</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Welcome back! Here's your financial overview</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Total Balance</p>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <h3 class="stat-value" id="balance-value">₹12,458.50</h3>
+                                    <button class="eye-toggle" onclick="toggleBalance()">👁️</button>
+                                </div>
+                                <div class="stat-trend">
+                                    <span>↗</span>
+                                    <span>+12.5% from last month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                💰
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Income</p>
+                                <h3 class="stat-value">₹3,500.00</h3>
+                                <div class="stat-trend">
+                                    <span>↗</span>
+                                    <span>This month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                                ↗
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Expenses</p>
+                                <h3 class="stat-value">₹1,076.00</h3>
+                                <div class="stat-trend negative">
+                                    <span>↘</span>
+                                    <span>This month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                💳
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="two-col-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Monthly Overview</h2>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h2 class="card-title" style="color: white; margin-bottom: 24px;">Quick Stats</h2>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Avg. Daily Spending</p>
+                                <p style="font-size: 24px; font-weight: 600;">₹38.44</p>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Savings Rate</p>
+                                <p style="font-size: 24px; font-weight: 600;">69.3%</p>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Total Transactions</p>
+                                <p style="font-size: 24px; font-weight: 600;">28</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Transactions</h2>
+                        <button class="btn btn-secondary" onclick="navigateTo('transactions')">View All</button>
+                    </div>
+                    <div class="transactions-list" id="recent-transactions"></div>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div id="transactions" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Transactions</h1>
+                    <p class="page-subtitle">Track all your income and expenses</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Transactions</h2>
+                        <button class="btn btn-primary" onclick="openAddTransactionModal()">+ Add Transaction</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Transaction</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th style="text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Page -->
+            <div id="budget" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Budget</h1>
+                    <p class="page-subtitle">Manage your monthly budget</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Total Budget</p>
+                            <h3 class="stat-value">₹2,000</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Total Spent</p>
+                            <h3 class="stat-value">₹1,076.00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Remaining</p>
+                            <h3 class="stat-value" style="color: #10b981;">₹924.00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Overall Progress</h2>
+                    <div class="category-bar" style="height: 24px; margin-bottom: 8px;">
+                        <div class="category-bar-fill" style="width: 53.8%; background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; color: #64748b;">
+                        <span>₹0</span>
+                        <span>₹2,000</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Budget by Category</h2>
+                    <div class="budget-categories" id="budget-categories"></div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analytics" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Analytics</h1>
+                    <p class="page-subtitle">Visualize your spending patterns</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <p class="stat-label">Avg. Monthly Income</p>
+                        <h3 class="stat-value">₹3,500</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Avg. Monthly Expenses</p>
+                        <h3 class="stat-value">₹1,076</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Savings Rate</p>
+                        <h3 class="stat-value" style="color: #10b981;">69.3%</h3>
+                    </div>
+                </div>
+
+                <div class="two-col-grid">
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 24px;">Spending by Category</h2>
+                        <div class="chart-container">
+                            <canvas id="category-pie-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 24px;">Income vs Expenses</h2>
+                        <div class="chart-container">
+                            <canvas id="income-expense-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Spending Trend (Last 6 Months)</h2>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h2 class="card-title" style="color: white; margin-bottom: 24px;">Monthly Summary</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Total Income</p>
+                            <p style="font-size: 32px; font-weight: 700;">₹3,500.00</p>
+                        </div>
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Total Expenses</p>
+                            <p style="font-size: 32px; font-weight: 700;">₹1,076.00</p>
+                        </div>
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Net Savings</p>
+                            <p style="font-size: 32px; font-weight: 700; color: #6ee7b7;">₹2,424.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Settings</h1>
+                    <p class="page-subtitle">Manage your account and preferences</p>
+                </div>
+
+                <div class="settings-grid">
+                    <div>
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Profile Information</h2>
+                            <div class="profile-header">
+                                <div class="profile-avatar">JD</div>
+                                <div>
+                                    <h3 class="profile-name">John Doe</h3>
+                                    <p class="profile-email">john.doe@example.com</p>
+                                    <p class="profile-since">Member since January 2024</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-input" value="John">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-input" value="Doe">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" value="john.doe@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-input">
+                                    <option selected>INR - Indian Rupee</option>
+                                    <option>USD - US Dollar</option>
+                                    <option>EUR - Euro</option>
+                                    <option>GBP - British Pound</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;">Save Changes</button>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Security</h2>
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-input" placeholder="Enter current password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-input" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-input" placeholder="Confirm new password">
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;">Update Password</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Notifications</h2>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Email Notifications</p>
+                                    <p class="setting-description">Receive updates via email</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Push Notifications</p>
+                                    <p class="setting-description">Get mobile alerts</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Budget Alerts</p>
+                                    <p class="setting-description">Notify when near limit</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Data Management</h2>
+                            <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">📥 Export Data</button>
+                            <button class="btn" style="width: 100%; background: #fee2e2; color: #dc2626;">🗑️ Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Transaction</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+
+            <div class="toggle-buttons">
+                <button class="toggle-btn active expense" onclick="setTransactionType('expense')">Expense</button>
+                <button class="toggle-btn income" onclick="setTransactionType('income')">Income</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <input type="text" id="transaction-description" class="form-input" placeholder="e.g., Grocery Shopping">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Amount (₹)</label>
+                <input type="number" id="transaction-amount" class="form-input" placeholder="0.00" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select id="transaction-category" class="form-input">
+                    <option value="Food & Dining">🍔 Food & Dining</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Transportation">🚗 Transportation</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Utilities">💡 Utilities</option>
+                    <option value="Healthcare">🏥 Healthcare</option>
+                    <option value="Salary">💼 Salary</option>
+                    <option value="Other">📦 Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" id="transaction-date" class="form-input">
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="addTransaction()">Add Transaction</button>
+        </div>
+    </div>
+
+</body>
+</html>
