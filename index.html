@@ -1,1 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: white;
+            padding: 24px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .nav-menu {
+            list-style: none;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            color: white;
+        }
+
+        .budget-card {
+            padding: 16px;
+            background: linear-gradient(135deg, #d1fae5 0%, #99f6e4 100%);
+            border-radius: 12px;
+            border: 1px solid #6ee7b7;
+            margin-top: auto;
+        }
+
+        .budget-label {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        .budget-amount {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .budget-bar {
+            margin-top: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .budget-progress {
+            height: 100%;
+            width: 53%;
+            background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);
+            border-radius: 99px;
+        }
+
+        .budget-spent {
+            font-size: 12px;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #10b981;
+            font-size: 14px;
+        }
+
+        .stat-trend.negative {
+            color: #ef4444;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Transactions List */
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .transaction-item:hover {
+            background: #f1f5f9;
+            transform: translateX(4px);
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .transaction-icon.income {
+            background: #d1fae5;
+        }
+
+        .transaction-icon.expense {
+            background: #fee2e2;
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .transaction-category {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .transaction-amount {
+            text-align: right;
+        }
+
+        .transaction-amount-value {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .transaction-amount-value.income {
+            color: #10b981;
+        }
+
+        .transaction-amount-value.expense {
+            color: #ef4444;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Budget Categories */
+        .budget-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .budget-category {
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .category-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .category-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .category-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .category-spent {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .category-remaining {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .category-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .category-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.5s ease;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .toggle-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active.expense {
+            border-color: #ef4444;
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .toggle-btn.active.income {
+            border-color: #10b981;
+            background: #d1fae5;
+            color: #10b981;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            padding: 20px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Settings */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .profile-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 600;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .profile-email {
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .profile-since {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #cbd5e1;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #10b981;
+        }
+
+        .toggle-switch-handle {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-switch-handle {
+            transform: translateX(20px);
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .setting-description {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .eye-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .eye-toggle:hover {
+            background: #f1f5f9;
+        }
+
+        .two-col-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .two-col-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .two-col-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">₹</div>
+                <span class="logo-text">FinanceTracker</span>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-page="dashboard">
+                            <span>📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="transactions">
+                            <span>💳</span>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="budget">
+                            <span>🎯</span>
+                            <span>Budget</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="analytics">
+                            <span>📈</span>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="settings">
+                            <span>⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="budget-card">
+                <p class="budget-label">Monthly Budget</p>
+                <p class="budget-amount">₹2,000</p>
+                <div class="budget-bar">
+                    <div class="budget-progress"></div>
+                </div>
+                <p class="budget-spent">₹1,076 spent</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Welcome back! Here's your financial overview</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Total Balance</p>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <h3 class="stat-value" id="balance-value">₹12,458.50</h3>
+                                    <button class="eye-toggle" onclick="toggleBalance()">👁️</button>
+                                </div>
+                                <div class="stat-trend">
+                                    <span>↗</span>
+                                    <span>+12.5% from last month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                💰
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Income</p>
+                                <h3 class="stat-value">₹3,500.00</h3>
+                                <div class="stat-trend">
+                                    <span>↗</span>
+                                    <span>This month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                                ↗
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-info">
+                                <p class="stat-label">Expenses</p>
+                                <h3 class="stat-value">₹1,076.00</h3>
+                                <div class="stat-trend negative">
+                                    <span>↘</span>
+                                    <span>This month</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                💳
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="two-col-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Monthly Overview</h2>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h2 class="card-title" style="color: white; margin-bottom: 24px;">Quick Stats</h2>
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Avg. Daily Spending</p>
+                                <p style="font-size: 24px; font-weight: 600;">₹38.44</p>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Savings Rate</p>
+                                <p style="font-size: 24px; font-weight: 600;">69.3%</p>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 16px; border-radius: 12px;">
+                                <p style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">Total Transactions</p>
+                                <p style="font-size: 24px; font-weight: 600;">28</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Transactions</h2>
+                        <button class="btn btn-secondary" onclick="navigateTo('transactions')">View All</button>
+                    </div>
+                    <div class="transactions-list" id="recent-transactions"></div>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div id="transactions" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Transactions</h1>
+                    <p class="page-subtitle">Track all your income and expenses</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Transactions</h2>
+                        <button class="btn btn-primary" onclick="openAddTransactionModal()">+ Add Transaction</button>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Transaction</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th style="text-align: right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Page -->
+            <div id="budget" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Budget</h1>
+                    <p class="page-subtitle">Manage your monthly budget</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Total Budget</p>
+                            <h3 class="stat-value">₹2,000</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Total Spent</p>
+                            <h3 class="stat-value">₹1,076.00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p class="stat-label">Remaining</p>
+                            <h3 class="stat-value" style="color: #10b981;">₹924.00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Overall Progress</h2>
+                    <div class="category-bar" style="height: 24px; margin-bottom: 8px;">
+                        <div class="category-bar-fill" style="width: 53.8%; background: linear-gradient(90deg, #10b981 0%, #14b8a6 100%);"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; color: #64748b;">
+                        <span>₹0</span>
+                        <span>₹2,000</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Budget by Category</h2>
+                    <div class="budget-categories" id="budget-categories"></div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="analytics" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Analytics</h1>
+                    <p class="page-subtitle">Visualize your spending patterns</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <p class="stat-label">Avg. Monthly Income</p>
+                        <h3 class="stat-value">₹3,500</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Avg. Monthly Expenses</p>
+                        <h3 class="stat-value">₹1,076</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Savings Rate</p>
+                        <h3 class="stat-value" style="color: #10b981;">69.3%</h3>
+                    </div>
+                </div>
+
+                <div class="two-col-grid">
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 24px;">Spending by Category</h2>
+                        <div class="chart-container">
+                            <canvas id="category-pie-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title" style="margin-bottom: 24px;">Income vs Expenses</h2>
+                        <div class="chart-container">
+                            <canvas id="income-expense-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title" style="margin-bottom: 24px;">Spending Trend (Last 6 Months)</h2>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h2 class="card-title" style="color: white; margin-bottom: 24px;">Monthly Summary</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Total Income</p>
+                            <p style="font-size: 32px; font-weight: 700;">₹3,500.00</p>
+                        </div>
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Total Expenses</p>
+                            <p style="font-size: 32px; font-weight: 700;">₹1,076.00</p>
+                        </div>
+                        <div>
+                            <p style="opacity: 0.9; font-size: 14px; margin-bottom: 4px;">Net Savings</p>
+                            <p style="font-size: 32px; font-weight: 700; color: #6ee7b7;">₹2,424.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Settings</h1>
+                    <p class="page-subtitle">Manage your account and preferences</p>
+                </div>
+
+                <div class="settings-grid">
+                    <div>
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Profile Information</h2>
+                            <div class="profile-header">
+                                <div class="profile-avatar">JD</div>
+                                <div>
+                                    <h3 class="profile-name">John Doe</h3>
+                                    <p class="profile-email">john.doe@example.com</p>
+                                    <p class="profile-since">Member since January 2024</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-input" value="John">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-input" value="Doe">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-input" value="john.doe@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-input">
+                                    <option selected>INR - Indian Rupee</option>
+                                    <option>USD - US Dollar</option>
+                                    <option>EUR - Euro</option>
+                                    <option>GBP - British Pound</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;">Save Changes</button>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Security</h2>
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-input" placeholder="Enter current password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-input" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-input" placeholder="Confirm new password">
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;">Update Password</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Notifications</h2>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Email Notifications</p>
+                                    <p class="setting-description">Receive updates via email</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Push Notifications</p>
+                                    <p class="setting-description">Get mobile alerts</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <p class="setting-label">Budget Alerts</p>
+                                    <p class="setting-description">Notify when near limit</p>
+                                </div>
+                                <div class="toggle-switch active" onclick="toggleSwitch(this)">
+                                    <div class="toggle-switch-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h2 class="card-title" style="margin-bottom: 24px;">Data Management</h2>
+                            <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;">📥 Export Data</button>
+                            <button class="btn" style="width: 100%; background: #fee2e2; color: #dc2626;">🗑️ Delete Account</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Transaction</h2>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+
+            <div class="toggle-buttons">
+                <button class="toggle-btn active expense" onclick="setTransactionType('expense')">Expense</button>
+                <button class="toggle-btn income" onclick="setTransactionType('income')">Income</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <input type="text" id="transaction-description" class="form-input" placeholder="e.g., Grocery Shopping">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Amount (₹)</label>
+                <input type="number" id="transaction-amount" class="form-input" placeholder="0.00" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select id="transaction-category" class="form-input">
+                    <option value="Food & Dining">🍔 Food & Dining</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Transportation">🚗 Transportation</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Utilities">💡 Utilities</option>
+                    <option value="Healthcare">🏥 Healthcare</option>
+                    <option value="Salary">💼 Salary</option>
+                    <option value="Other">📦 Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" id="transaction-date" class="form-input">
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="addTransaction()">Add Transaction</button>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        let transactions = [
+            { id: 1, description: 'Salary', amount: 3500, category: 'Salary', type: 'income', date: '2024-02-01', icon: '💼' },
+            { id: 2, description: 'Grocery Shopping', amount: -120.50, category: 'Food & Dining', type: 'expense', date: '2024-02-15', icon: '🍔' },
+            { id: 3, description: 'Electric Bill', amount: -85.30, category: 'Utilities', type: 'expense', date: '2024-02-10', icon: '💡' },
+            { id: 4, description: 'Netflix Subscription', amount: -15.99, category: 'Entertainment', type: 'expense', date: '2024-02-05', icon: '🎬' },
+            { id: 5, description: 'Uber Ride', amount: -25.40, category: 'Transportation', type: 'expense', date: '2024-02-12', icon: '🚗' },
+            { id: 6, description: 'Coffee Shop', amount: -8.75, category: 'Food & Dining', type: 'expense', date: '2024-02-14', icon: '☕' },
+            { id: 7, description: 'Online Shopping', amount: -89.99, category: 'Shopping', type: 'expense', date: '2024-02-18', icon: '🛍️' },
+            { id: 8, description: 'Restaurant Dinner', amount: -65.20, category: 'Food & Dining', type: 'expense', date: '2024-02-20', icon: '🍽️' },
+            { id: 9, description: 'Gas Station', amount: -45.00, category: 'Transportation', type: 'expense', date: '2024-02-22', icon: '⛽' },
+            { id: 10, description: 'Movie Tickets', amount: -28.50, category: 'Entertainment', type: 'expense', date: '2024-02-25', icon: '🎬' }
+        ];
+
+        const budgetCategories = [
+            { name: 'Food & Dining', allocated: 450, spent: 201.45, color: '#ef4444', icon: '🍔' },
+            { name: 'Shopping', allocated: 300, spent: 89.99, color: '#f59e0b', icon: '🛍️' },
+            { name: 'Transportation', allocated: 200, spent: 70.40, color: '#3b82f6', icon: '🚗' },
+            { name: 'Entertainment', allocated: 150, spent: 44.49, color: '#8b5cf6', icon: '🎬' },
+            { name: 'Utilities', allocated: 400, spent: 85.30, color: '#10b981', icon: '💡' },
+            { name: 'Healthcare', allocated: 500, spent: 0, color: '#ec4899', icon: '🏥' }
+        ];
+
+        const monthlyData = [
+            { month: 'Sep', income: 3200, expenses: 1800 },
+            { month: 'Oct', income: 3400, expenses: 1500 },
+            { month: 'Nov', income: 3300, expenses: 1650 },
+            { month: 'Dec', income: 3600, expenses: 1900 },
+            { month: 'Jan', income: 3500, expenses: 1200 },
+            { month: 'Feb', income: 3500, expenses: 1076 }
+        ];
+
+        let currentTransactionType = 'expense';
+        let balanceVisible = true;
+
+        // Chart instances
+        let monthlyChart = null;
+        let categoryPieChart = null;
+        let incomeExpenseChart = null;
+        let trendChart = null;
+
+        // Navigation
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            
+            document.getElementById(page).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            // Render charts when navigating to pages
+            if (page === 'dashboard') {
+                setTimeout(renderMonthlyChart, 100);
+            } else if (page === 'analytics') {
+                setTimeout(() => {
+                    renderCategoryPieChart();
+                    renderIncomeExpenseChart();
+                    renderTrendChart();
+                }, 100);
+            }
+        }
+
+        // Event listeners for navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                navigateTo(page);
+            });
+        });
+
+        // Toggle balance visibility
+        function toggleBalance() {
+            balanceVisible = !balanceVisible;
+            const balanceEl = document.getElementById('balance-value');
+            if (balanceVisible) {
+                balanceEl.textContent = '₹12,458.50';
+            } else {
+                balanceEl.textContent = '••••••';
+            }
+        }
+
+        // Render transactions
+        function renderRecentTransactions() {
+            const container = document.getElementById('recent-transactions');
+            const recent = transactions.slice(0, 5);
+            
+            container.innerHTML = recent.map(t => `
+                <div class="transaction-item">
+                    <div class="transaction-icon ${t.type}">
+                        ${t.icon}
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-name">${t.description}</div>
+                        <div class="transaction-category">${t.category}</div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="transaction-amount-value ${t.type}">
+                            ${t.type === 'income' ? '+' : ''}₹${Math.abs(t.amount).toFixed(2)}
+                        </div>
+                        <div class="transaction-date">${new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTransactionsTable() {
+            const tbody = document.getElementById('transactions-table');
+            
+            tbody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="transaction-icon ${t.type}" style="width: 40px; height: 40px;">
+                                ${t.icon}
+                            </div>
+                            <span style="font-weight: 600; color: #1e293b;">${t.description}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="display: inline-block; padding: 4px 12px; background: #f1f5f9; border-radius: 99px; font-size: 12px; font-weight: 500;">
+                            ${t.category}
+                        </span>
+                    </td>
+                    <td style="color: #64748b;">
+                        ${new Date(t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </td>
+                    <td style="text-align: right;">
+                        <span style="font-weight: 600; color: ${t.type === 'income' ? '#10b981' : '#ef4444'};">
+                            ${t.type === 'income' ? '+' : ''}₹${Math.abs(t.amount).toFixed(2)}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderBudgetCategories() {
+            const container = document.getElementById('budget-categories');
+            
+            container.innerHTML = budgetCategories.map(cat => {
+                const percentage = (cat.spent / cat.allocated) * 100;
+                const remaining = cat.allocated - cat.spent;
+                const isOverBudget = remaining < 0;
+
+                return `
+                    <div class="budget-category">
+                        <div class="category-header">
+                            <div class="category-info">
+                                <div class="category-icon" style="background-color: ${cat.color}20; color: ${cat.color};">
+                                    ${cat.icon}
+                                </div>
+                                <div>
+                                    <div class="category-name">${cat.name}</div>
+                                    <div class="category-spent">₹${cat.spent.toFixed(2)} of ₹${cat.allocated.toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div class="category-remaining" style="color: ${isOverBudget ? '#ef4444' : remaining < 50 ? '#f59e0b' : '#10b981'};">
+                                ${isOverBudget ? '-' : ''}₹${Math.abs(remaining).toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="category-bar">
+                            <div class="category-bar-fill" style="width: ${Math.min(percentage, 100)}%; background: ${cat.color};"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Chart rendering functions
+        function renderMonthlyChart() {
+            const ctx = document.getElementById('monthly-chart');
+            if (!ctx) return;
+
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyData.map(d => d.month),
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: monthlyData.map(d => d.income),
+                            backgroundColor: '#10b981',
+                            borderRadius: 8,
+                        },
+                        {
+                            label: 'Expenses',
+                            data: monthlyData.map(d => d.expenses),
+                            backgroundColor: '#ef4444',
+                            borderRadius: 8,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryPieChart() {
+            const ctx = document.getElementById('category-pie-chart');
+            if (!ctx) return;
+
+            if (categoryPieChart) {
+                categoryPieChart.destroy();
+            }
+
+            categoryPieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: budgetCategories.map(c => c.name),
+                    datasets: [{
+                        data: budgetCategories.map(c => c.spent),
+                        backgroundColor: budgetCategories.map(c => c.color),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    return label + ': ₹' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderIncomeExpenseChart() {
+            const ctx = document.getElementById('income-expense-chart');
+            if (!ctx) return;
+
+            if (incomeExpenseChart) {
+                incomeExpenseChart.destroy();
+            }
+
+            const totalIncome = 3500;
+            const totalExpenses = 1076;
+
+            incomeExpenseChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Income', 'Expenses', 'Savings'],
+                    datasets: [{
+                        data: [totalIncome, totalExpenses, totalIncome - totalExpenses],
+                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    return label + ': ₹' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTrendChart() {
+            const ctx = document.getElementById('trend-chart');
+            if (!ctx) return;
+
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(d => d.month),
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: monthlyData.map(d => d.income),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Expenses',
+                            data: monthlyData.map(d => d.expenses),
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y || 0;
+                                    return label + ': ₹' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Modal functions
+        function openAddTransactionModal() {
+            document.getElementById('transaction-modal').classList.add('active');
+            document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
+        }
+
+        function closeModal() {
+            document.getElementById('transaction-modal').classList.remove('active');
+        }
+
+        function setTransactionType(type) {
+            currentTransactionType = type;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.toggle-btn.${type}`).classList.add('active');
+        }
+
+        function addTransaction() {
+            const description = document.getElementById('transaction-description').value;
+            const amount = parseFloat(document.getElementById('transaction-amount').value);
+            const category = document.getElementById('transaction-category').value;
+            const date = document.getElementById('transaction-date').value;
+
+            if (!description || !amount || !date) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const categoryIcons = {
+                'Food & Dining': '🍔',
+                'Shopping': '🛍️',
+                'Transportation': '🚗',
+                'Entertainment': '🎬',
+                'Utilities': '💡',
+                'Healthcare': '🏥',
+                'Salary': '💼',
+                'Other': '📦'
+            };
+
+            const newTransaction = {
+                id: transactions.length + 1,
+                description,
+                amount: currentTransactionType === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+                category,
+                type: currentTransactionType,
+                date,
+                icon: categoryIcons[category] || '📦'
+            };
+
+            transactions.unshift(newTransaction);
+            
+            renderRecentTransactions();
+            renderTransactionsTable();
+            closeModal();
+
+            // Reset form
+            document.getElementById('transaction-description').value = '';
+            document.getElementById('transaction-amount').value = '';
+            
+            alert('Transaction added successfully!');
+        }
+
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderRecentTransactions();
+            renderTransactionsTable();
+            renderBudgetCategories();
+            renderMonthlyChart();
+            
+            // Set today's date as default
+            const dateInput = document.getElementById('transaction-date');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+        });
+    </script>
+</body>
+</html>
 
